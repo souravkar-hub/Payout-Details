@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Incentive Calculator — Orange Health Labs</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f6f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2.5rem 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+      padding: 2rem 2.25rem;
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.75rem;
+    }
+
+    .brand-dot {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: #1D9E75;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .brand-name { font-size: 13px; font-weight: 600; color: #1a1a1a; letter-spacing: 0.01em; }
+    .brand-tag { font-size: 12px; color: #888; margin-top: 1px; }
+
+    h1 { font-size: 20px; font-weight: 600; color: #111; margin-bottom: 0.25rem; }
+    .subtitle { font-size: 14px; color: #777; margin-bottom: 1.75rem; }
+
+    .section-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.07em;
+      text-transform: uppercase; color: #aaa; margin-bottom: 0.875rem;
+    }
+
+    .inputs-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-bottom: 1.75rem;
+    }
+
+    .field label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; }
+
+    .field input {
+      width: 100%; font-size: 15px; font-family: inherit;
+      color: #111; background: #f9f9f9;
+      border: 1px solid #e5e5e5; border-radius: 8px;
+      padding: 9px 12px; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .field input:focus {
+      border-color: #1D9E75;
+      box-shadow: 0 0 0 3px rgba(29,158,117,0.12);
+      background: #fff;
+    }
+
+    .metrics {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; margin-bottom: 1.5rem;
+    }
+
+    .metric { background: #f5f6f8; border-radius: 10px; padding: 0.875rem 1rem; }
+    .metric-label { font-size: 12px; color: #888; margin-bottom: 4px; line-height: 1.3; }
+    .metric-value { font-size: 20px; font-weight: 600; color: #111; }
+    .metric-value.green { color: #0F6E56; }
+
+    .breakdown {
+      border: 1px solid #eee; border-radius: 12px;
+      overflow: hidden; margin-bottom: 1.25rem;
+    }
+
+    .breakdown-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.75rem 1.125rem; font-size: 14px;
+    }
+
+    .breakdown-row + .breakdown-row { border-top: 1px solid #eee; }
+    .breakdown-row.total { background: #f9f9f9; font-weight: 600; }
+    .breakdown-row.subtotal { background: #f5f6f8; font-weight: 500; font-size: 13px; }
+    .breakdown-row.section-head {
+      background: #f0faf6; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase; color: #1D9E75;
+      padding: 0.5rem 1.125rem;
+    }
+    .breakdown-row.deduction .bd-value { color: #c0392b; }
+
+    .bd-label { color: #666; }
+    .bd-code { color: #aaa; font-size: 12px; margin-right: 6px; }
+    .bd-value { color: #111; font-variant-numeric: tabular-nums; }
+    .bd-value.green { color: #0F6E56; font-size: 16px; }
+    .bd-value.big { font-size: 17px; color: #0F6E56; }
+
+    .progress-section { margin-bottom: 0.25rem; }
+
+    .progress-labels {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: #aaa; margin-bottom: 6px;
+    }
+
+    .progress-track { height: 8px; background: #eee; border-radius: 99px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #5DCAA5, #0F6E56);
+      transition: width 0.3s ease;
+    }
+
+    .notice {
+      margin-top: 1rem; font-size: 13px; color: #B07D1A;
+      background: #FEF3DC; border-radius: 8px; padding: 0.625rem 0.875rem;
+    }
+
+    .divider { border: none; border-top: 1px solid #eee; margin: 1.5rem 0; }
+
+    .stripe-tabs {
+      display: flex; gap: 8px; margin-bottom: 1.25rem;
+    }
+
+    .stripe-tab {
+      padding: 6px 16px; font-size: 13px; font-weight: 500;
+      border-radius: 99px; border: 1px solid #e5e5e5;
+      background: #fff; color: #888; cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .stripe-tab.active {
+      background: #1D9E75; color: #fff; border-color: #1D9E75;
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 1.5rem 1.25rem; }
+      .inputs-grid { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <div class="brand-dot">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 3v12M3 9h12" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">Orange Health Labs</div>
+        <div class="brand-tag">Team incentive tool</div>
+      </div>
+    </div>
+
+    <h1>Incentive calculator</h1>
+    <p class="subtitle">Enter order count and rates to calculate team payout.</p>
+
+    <!-- INCENTIVE INPUTS -->
+    <p class="section-label">Incentive inputs</p>
+    <div class="inputs-grid">
+      <div class="field">
+        <label for="orders">No. of orders</label>
+        <input type="number" id="orders" value="200" min="0" step="1">
+      </div>
+      <div class="field">
+        <label for="threshold">Threshold orders</label>
+        <input type="number" id="threshold" value="170" min="0" step="1">
+      </div>
+      <div class="field">
+        <label for="rate1">Rate up to threshold (₹)</label>
+        <input type="number" id="rate1" value="70" min="0" step="1">
+      </div>
+      <div class="field">
+        <label for="rate2">Rate above threshold (₹)</label>
+        <input type="number" id="rate2" value="110" min="0" step="1">
+      </div>
+    </div>
+
+    <p class="section-label">Incentive summary</p>
+    <div class="metrics">
+      <div class="metric">
+        <p class="metric-label">Base orders</p>
+        <p class="metric-value" id="m-base">170</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Above threshold</p>
+        <p class="metric-value" id="m-above">30</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">Incentive payout</p>
+        <p class="metric-value green" id="m-incentive">₹15,200</p>
+      </div>
+    </div>
+
+    <div class="breakdown">
+      <div class="breakdown-row">
+        <span class="bd-label">Part 1 — base orders × ₹<span id="bd-r1">70</span></span>
+        <span class="bd-value" id="bd-p1">₹11,900</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="bd-label">Part 2 — excess orders × ₹<span id="bd-r2">110</span></span>
+        <span class="bd-value" id="bd-p2">₹3,300</span>
+      </div>
+      <div class="breakdown-row total">
+        <span class="bd-label">Incentive total (P1 + P2)</span>
+        <span class="bd-value green" id="bd-incentive-total">₹15,200</span>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-labels">
+        <span>0</span>
+        <span id="lbl-threshold">Threshold: 170</span>
+        <span id="lbl-orders">200 orders</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="bar" style="width:100%"></div>
+      </div>
+    </div>
+
+    <div id="notice" class="notice" style="display:none;"></div>
+
+    <hr class="divider">
+
+    <!-- SALARY BREAKUP -->
+    <p class="section-label">Salary breakup</p>
+
+    <div class="stripe-tabs">
+      <button class="stripe-tab active" onclick="setStripe(1)">Stripe 1</button>
+      <button class="stripe-tab" onclick="setStripe(2)">Stripe 2</button>
+    </div>
+
+    <div class="breakdown">
+      <div class="breakdown-row section-head"><span>Earnings</span></div>
+
+      <div class="breakdown-row">
+        <span class="bd-label"><span class="bd-code">A</span>Basic wages</span>
+        <span class="bd-value">
+          <input type="number" id="basic" value="18570" min="0" step="1"
+            style="width:100px; text-align:right; font-size:14px; padding:4px 8px; border:1px solid #e5e5e5; border-radius:6px; background:#f9f9f9; font-family:inherit; outline:none;">
+        </span>
+      </div>
+      <div class="breakdown-row">
+        <span class="bd-label"><span class="bd-code">B</span>HRA</span>
+        <span class="bd-value" id="hra">₹0</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="bd-label"><span class="bd-code">C</span>Statutory bonus</span>
+        <span class="bd-value">
+          <input type="number" id="stat-bonus" value="1547" min="0" step="1"
+            style="width:100px; text-align:right; font-size:14px; padding:4px 8px; border:1px solid #e5e5e5; border-radius:6px; background:#f9f9f9; font-family:inherit; outline:none;">
+        </span>
+      </div>
+      <div class="breakdown-row">
+        <span class="bd-label"><span class="bd-code">D</span>Special allowance</span>
+        <span class="bd-value">
+          <input type="number" id="special-allow" value="0" min="0" step="1"
+            style="width:100px; text-align:right; font-size:14px; padding:4px 8px; border:1px solid #e5e5e5; border-radius:6px; background:#f9f9f9; font-family:inherit; outline:none;">
+        </span>
+      </div>
+      <div class="breakdown-row">
+        <span class="bd-label"><span class="bd-code">E</span>Employer PF</span>
+        <span class="bd-value">
+          <input type="number" id="emp-pf" value="1950" min="0" step="1"
+            style="width:100px; text-align:right; font-size:14px; padding:4px 8px; border:1px solid #e5e5e5; border-radius:6px; background:#f9f9f9; font-family:inherit; outline:none;">
+        </span>
+      </div>
+      <div class="breakdown-row">
+        <span class="bd-label"><span class="bd-code">F</span>Employer ESI</span>
+        <span class="bd-value">
+          <input type="number" id="emp-esi" value="604" min="0" step="1"
+            style="width:100px; text-align:right; font-size:14px; padding:4px 8px; border:1px solid #e5e5e5; border-radius:6px; background:#f9f9f9; font-family:inherit; outline:none;">
+        </span>
+      </div>
+      <div class="breakdown-row">
+        <span class="bd-label"><span class="bd-code">G</span>Gratuity</span>
+        <span class="bd-value">
+          <input type="number" id="gratuity" value="893" min="0" step="1"
+            style="width:100px; text-align:right; font-size:14px; padding:4px 8px; border:1px solid #e5e5e5; border-radius:6px; background:#f9f9f9; font-family:inherit; outline:none;">
+        </span>
+      </div>
+      <div class="breakdown-row subtotal">
+        <span class="bd-label"><span class="bd-code">H</span>Total salary (A+B+C+D)</span>
+        <span class="bd-value" id="total-abcd">₹20,117</span>
+      </div>
+
+      <div class="breakdown-row section-head"><span>Deductions</span></div>
+
+      <div class="breakdown-row deduction">
+        <span class="bd-label"><span class="bd-code">I</span>Employee PF</span>
+        <span class="bd-value">
+          <input type="number" id="ee-pf" value="1800" min="0" step="1"
+            style="width:100px; text-align:right; font-size:14px; padding:4px 8px; border:1px solid #e5e5e5; border-radius:6px; background:#f9f9f9; font-family:inherit; outline:none;">
+        </span>
+      </div>
+      <div class="breakdown-row deduction">
+        <span class="bd-label"><span class="bd-code">J</span>Employee ESI</span>
+        <span class="bd-value">
+          <input type="number" id="ee-esi" value="139" min="0" step="1"
+            style="width:100px; text-align:right; font-size:14px; padding:4px 8px; border:1px solid #e5e5e5; border-radius:6px; background:#f9f9f9; font-family:inherit; outline:none;">
+        </span>
+      </div>
+      <div class="breakdown-row deduction">
+        <span class="bd-label"><span class="bd-code">K</span>Professional tax</span>
+        <span class="bd-value">
+          <input type="number" id="prof-tax" value="0" min="0" step="1"
+            style="width:100px; text-align:right; font-size:14px; padding:4px 8px; border:1px solid #e5e5e5; border-radius:6px; background:#f9f9f9; font-family:inherit; outline:none;">
+        </span>
+      </div>
+
+      <div class="breakdown-row total">
+        <span class="bd-label">Total salary (fixed + incentive)</span>
+        <span class="bd-value big" id="grand-total">₹35,317</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function fmt(n) { return '₹' + Math.round(n).toLocaleString('en-IN'); }
+
+    var stripe2 = {
+      basic: 18570, statBonus: 1547, specialAllow: 0,
+      empPf: 1950, empEsi: 604, gratuity: 893,
+      eePf: 1800, eeEsi: 139, profTax: 0,
+      fixedSalary: 22000
+    };
+    var stripe1 = {
+      basic: 18570, statBonus: 1547, specialAllow: 0,
+      empPf: 1950, empEsi: 604, gratuity: 893,
+      eePf: 1800, eeEsi: 139, profTax: 0,
+      fixedSalary: 0
+    };
+    var currentStripe = 1;
+
+    function setStripe(n) {
+      currentStripe = n;
+      document.querySelectorAll('.stripe-tab').forEach(function(t, i) {
+        t.classList.toggle('active', i + 1 === n);
+      });
+      if (n === 2) {
+        document.getElementById('basic').value = stripe2.basic;
+        document.getElementById('stat-bonus').value = stripe2.statBonus;
+        document.getElementById('special-allow').value = stripe2.specialAllow;
+        document.getElementById('emp-pf').value = stripe2.empPf;
+        document.getElementById('emp-esi').value = stripe2.empEsi;
+        document.getElementById('gratuity').value = stripe2.gratuity;
+        document.getElementById('ee-pf').value = stripe2.eePf;
+        document.getElementById('ee-esi').value = stripe2.eeEsi;
+        document.getElementById('prof-tax').value = stripe2.profTax;
+      } else {
+        document.getElementById('basic').value = stripe1.basic;
+        document.getElementById('stat-bonus').value = stripe1.statBonus;
+        document.getElementById('special-allow').value = stripe1.specialAllow;
+        document.getElementById('emp-pf').value = stripe1.empPf;
+        document.getElementById('emp-esi').value = stripe1.empEsi;
+        document.getElementById('gratuity').value = stripe1.gratuity;
+        document.getElementById('ee-pf').value = stripe1.eePf;
+        document.getElementById('ee-esi').value = stripe1.eeEsi;
+        document.getElementById('prof-tax').value = stripe1.profTax;
+      }
+      calc();
+    }
+
+    function calc() {
+      var orders = parseFloat(document.getElementById('orders').value) || 0;
+      var threshold = parseFloat(document.getElementById('threshold').value) || 0;
+      var r1 = parseFloat(document.getElementById('rate1').value) || 0;
+      var r2 = parseFloat(document.getElementById('rate2').value) || 0;
+
+      var base = Math.min(orders, threshold);
+      var above = Math.max(0, orders - threshold);
+      var p1 = base * r1;
+      var p2 = above * r2;
+      var incentive = p1 + p2;
+
+      document.getElementById('m-base').textContent = Math.round(base).toLocaleString('en-IN');
+      document.getElementById('m-above').textContent = Math.round(above).toLocaleString('en-IN');
+      document.getElementById('m-incentive').textContent = fmt(incentive);
+      document.getElementById('bd-r1').textContent = Math.round(r1);
+      document.getElementById('bd-r2').textContent = Math.round(r2);
+      document.getElementById('bd-p1').textContent = fmt(p1);
+      document.getElementById('bd-p2').textContent = fmt(p2);
+      document.getElementById('bd-incentive-total').textContent = fmt(incentive);
+
+      var maxBar = Math.max(orders, threshold) * 1.2 || 1;
+      document.getElementById('bar').style.width = Math.round(Math.min(100, (orders / maxBar) * 100)) + '%';
+      document.getElementById('lbl-threshold').textContent = 'Threshold: ' + Math.round(threshold).toLocaleString('en-IN');
+      document.getElementById('lbl-orders').textContent = Math.round(orders).toLocaleString('en-IN') + ' orders';
+
+      var notice = document.getElementById('notice');
+      if (orders < threshold && threshold > 0) {
+        notice.style.display = 'block';
+        notice.textContent = Math.round(threshold - orders).toLocaleString('en-IN') + ' more orders needed to reach the threshold and earn the higher rate.';
+      } else {
+        notice.style.display = 'none';
+      }
+
+      // Salary section
+      var basic = parseFloat(document.getElementById('basic').value) || 0;
+      var statBonus = parseFloat(document.getElementById('stat-bonus').value) || 0;
+      var specialAllow = parseFloat(document.getElementById('special-allow').value) || 0;
+      var empPf = parseFloat(document.getElementById('emp-pf').value) || 0;
+      var empEsi = parseFloat(document.getElementById('emp-esi').value) || 0;
+      var gratuity = parseFloat(document.getElementById('gratuity').value) || 0;
+      var eePf = parseFloat(document.getElementById('ee-pf').value) || 0;
+      var eeEsi = parseFloat(document.getElementById('ee-esi').value) || 0;
+      var profTax = parseFloat(document.getElementById('prof-tax').value) || 0;
+
+      var fixedSalary = currentStripe === 2 ? 22000 : 0;
+      var hra = Math.max(0, fixedSalary - basic);
+      document.getElementById('hra').textContent = fmt(hra);
+
+      var totalABCD = basic + hra + statBonus + specialAllow;
+      document.getElementById('total-abcd').textContent = fmt(totalABCD);
+
+      var grandTotal = totalABCD + incentive;
+      document.getElementById('grand-total').textContent = fmt(grandTotal);
+    }
+
+    var ids = ['orders','threshold','rate1','rate2','basic','stat-bonus','special-allow',
+               'emp-pf','emp-esi','gratuity','ee-pf','ee-esi','prof-tax'];
+    ids.forEach(function(id) {
+      document.getElementById(id).addEventListener('input', calc);
+    });
+
+    calc();
+  </script>
+</body>
+</html>
